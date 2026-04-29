@@ -1,0 +1,23 @@
+/.bloop/
+/.metals/
+/.bsp/
+/.idea/
+/.vscode/
+/.DS_Store
+
+/.bloop/**
+**/.bloop/
+**/.bloop/**
+
+# sbt / compilación (incluye targets anidados)
+**/target/
+
+# Evitar subcarpetas generadas accidentalmente
+project/project/
+
+*.class
+*.log
+
+# Editor integration (Metals)
+**/metals.sbt
+
