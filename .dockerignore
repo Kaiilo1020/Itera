@@ -1,0 +1,14 @@
+*.md
+.git
+.gitignore
+.env
+.env.local
+.vscode
+.idea
+*.log
+node_modules
+dist
+target
+build
+.DS_Store
+.gitkeep
