@@ -1,0 +1,13 @@
+target/
+.idea/
+*.class
+*.log
+.bsp/
+project/target/
+project/project/
+.git/
+.gitignore
+README.md
+LICENSE
+DOCKER.md
+.env

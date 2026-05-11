@@ -1,0 +1,28 @@
+# Build stage
+FROM eclipse-temurin:17-jdk AS build
+WORKDIR /app
+
+# Install sbt
+RUN apt-get update && apt-get install -y curl gnupg && \
+    echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | tee /etc/apt/sources.list.d/sbt.list && \
+    curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | apt-key add && \
+    apt-get update && apt-get install -y sbt && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY build.sbt .
+COPY project project
+RUN sbt update
+COPY . .
+RUN sbt stage
+
+# Runtime stage
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+
+# Install curl for healthchecks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /app/target/universal/stage .
+EXPOSE 8080
+ENV PLAY_HTTP_SECRET_KEY=""
+ENTRYPOINT ["./bin/Itera"]
