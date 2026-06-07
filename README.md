@@ -17,4 +17,4 @@ sbt run
 
 - `src/main/scala/IteraApp.scala`: punto de entrada del programa.
 
-GAAAAAAA
+
