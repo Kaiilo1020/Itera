@@ -1,45 +1,28 @@
-# Build stage - Compilar con SBT
-FROM openjdk:11-jdk-slim as builder
-
+# Build stage
+FROM eclipse-temurin:17-jdk AS build
 WORKDIR /app
 
-# Instalar SBT
-RUN apt-get update && \
-    apt-get install -y curl && \
-    curl -fsSL https://github.com/sbt/sbt/releases/download/v1.9.7/sbt-1.9.7.tgz | tar xz -C /opt && \
-    ln -s /opt/sbt/bin/sbt /usr/local/bin/sbt && \
+# Install sbt
+RUN apt-get update && apt-get install -y curl gnupg && \
+    echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | tee /etc/apt/sources.list.d/sbt.list && \
+    curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | apt-key add && \
+    apt-get update && apt-get install -y sbt && \
     rm -rf /var/lib/apt/lists/*
 
-# Copiar build.sbt y project/
-COPY build.sbt build.sbt
-COPY project/ project/
-
-# Descargar dependencias (crear capas en caché)
+COPY build.sbt .
+COPY project project
 RUN sbt update
+COPY . .
+RUN sbt stage
 
-# Copiar código fuente
-COPY src/ src/
-
-# Compilar y empaquetar
-RUN sbt dist
-
-# Runtime stage - Imagen mínima
-FROM openjdk:11-jdk-slim
-
+# Runtime stage
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 
-# Copiar distribución del build anterior
-COPY --from=builder /app/target/universal/stage /app
+# Install curl for healthchecks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Crear usuario no-root
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-USER appuser
-
+COPY --from=build /app/target/universal/stage .
 EXPOSE 8080
-
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
-
-# Ejecutar la aplicación
-CMD ["/app/bin/itera", "-Dplay.server.provider=play.core.server.NettyServerProvider"]
+ENV PLAY_HTTP_SECRET_KEY="changeme"
+ENTRYPOINT ["./bin/Itera", "-Dplay.server.provider=play.core.server.NettyServerProvider"]

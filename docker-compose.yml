@@ -1,0 +1,50 @@
+version: '3.8'
+
+# Docker Compose local para desarrollo del servicio Scala
+# Uso: docker-compose up -d
+# Esto levanta PostgreSQL + tu backend Scala localmente
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: itera-db-local
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: itera
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend-scala:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: itera-scala-local
+    ports:
+      - "8080:8080"
+    environment:
+      - PLAY_SECRET_KEY=changeme-local-dev-only
+      - DB_URL=jdbc:postgresql://db:5432/itera
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - PYTHON_API_URL=http://host.docker.internal:8000
+      - PROLOG_URL=http://host.docker.internal:9000
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  db-data:

@@ -21,3 +21,17 @@ project/project/
 # Editor integration (Metals)
 **/metals.sbt
 
+# Play Framework
+logs/
+run/
+tmp/
+dist/
+.cache/
+*.pid
+
+# Environment files (secrets!)
+.env
+*.env
+
+# OS files
+Thumbs.db
