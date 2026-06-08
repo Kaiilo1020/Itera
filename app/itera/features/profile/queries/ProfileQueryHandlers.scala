@@ -7,14 +7,15 @@ import itera.features.profile.domain.StudentRepository
 import itera.features.goals.domain.GoalRepository
 import itera.features.progress.domain.ProgressRepository
 import itera.shared.domain.DomainError
-import itera.shared.infrastructure.LogicClient
+import itera.shared.infrastructure.{LogicClient, IAClient}
 import java.util.UUID
 
 class ProfileQueryHandlers[F[_]: Async](
   repo: StudentRepository[F],
   goalRepo: GoalRepository[F],
   progressRepo: ProgressRepository[F],
-  logicClient: LogicClient
+  logicClient: LogicClient,
+  iaClient: IAClient
 ) {
 
   def getProfile(userId: UUID): F[Either[DomainError, StudentProfileView]] = {
@@ -32,8 +33,13 @@ class ProfileQueryHandlers[F[_]: Async](
       pace = "normal" 
       
       // Call logic engine with resilience
-      maybeData <- EitherT.right[DomainError](Async[F].fromFuture(Async[F].delay {
+      maybeLogicData <- EitherT.right[DomainError](Async[F].fromFuture(Async[F].delay {
         logicClient.getRoadmap(student.id, approvedNodes, profile.skills.map(_.name), hours, pace)
+      }))
+
+      // Call IA microservice for match score
+      maybeMatchData <- EitherT.right[DomainError](Async[F].fromFuture(Async[F].delay {
+        iaClient.getMatchScore(student.id, profile.skills.map(_.name))
       }))
       
     } yield StudentProfileView(
@@ -48,9 +54,10 @@ class ProfileQueryHandlers[F[_]: Async](
       skills = profile.skills,
       // Convert Circe Json to Play JSValue for the view
       badges = profile.badges.map(json => play.api.libs.json.Json.parse(json.noSpaces)),
-      roadmap = maybeData.flatMap(json => (json \ "roadmap").asOpt[play.api.libs.json.JsValue]),
-      projection = maybeData.flatMap(json => (json \ "projection").asOpt[play.api.libs.json.JsValue]),
-      recommendations = maybeData.flatMap(json => (json \ "recommendations").asOpt[play.api.libs.json.JsValue])
+      roadmap = maybeLogicData.flatMap(json => (json \ "roadmap").asOpt[play.api.libs.json.JsValue]),
+      projection = maybeLogicData.flatMap(json => (json \ "projection").asOpt[play.api.libs.json.JsValue]),
+      recommendations = maybeLogicData.flatMap(json => (json \ "recommendations").asOpt[play.api.libs.json.JsValue]),
+      matchScore = maybeMatchData
     )
 
     result.value

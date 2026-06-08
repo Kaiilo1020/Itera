@@ -16,5 +16,6 @@ final case class StudentProfileView(
   badges: Option[play.api.libs.json.JsValue] = None,
   roadmap: Option[play.api.libs.json.JsValue] = None,
   projection: Option[play.api.libs.json.JsValue] = None,
-  recommendations: Option[play.api.libs.json.JsValue] = None
+  recommendations: Option[play.api.libs.json.JsValue] = None,
+  matchScore: Option[play.api.libs.json.JsValue] = None
 )
