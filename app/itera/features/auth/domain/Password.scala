@@ -20,11 +20,11 @@ object HashedPassword {
   // Factory/Converter from RawPassword
   def hash(raw: RawPassword): HashedPassword = {
     // Correct bcrypt syntax for t3hnar
-    new HashedPassword(raw.value.bcrypt)
+    new HashedPassword(raw.value.boundedBcrypt)
   }
 
   def verify(raw: RawPassword, hashed: HashedPassword): Boolean = {
     // Correct bcrypt verification syntax for t3hnar
-    raw.value.isBcrypted(hashed.value)
+    raw.value.isBcryptedBounded(hashed.value)
   }
 }
