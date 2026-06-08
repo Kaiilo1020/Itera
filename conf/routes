@@ -2,6 +2,30 @@
 # This file defines all application routes (Higher priority routes first)
 # https://www.playframework.com/documentation/latest/ScalaRouting
 
+# Auth
+POST    /api/core/auth/register           controllers.AuthController.register()
+POST    /api/core/auth/login              controllers.AuthController.login()
+
+# Academic Profile
+GET     /api/core/profile                 controllers.ProfileController.getProfile()
+POST    /api/core/profile/initialize      controllers.ProfileController.initialize()
+PUT     /api/core/profile                 controllers.ProfileController.update()
+
+# Goal Planner
+GET     /api/core/goals                   controllers.GoalController.getGoals()
+POST    /api/core/goals                   controllers.GoalController.setGoals()
+
+# Catalogs
+GET     /api/core/catalogs/institutions   controllers.CatalogController.listInstitutions()
+POST    /api/core/catalogs/institutions   controllers.CatalogController.createInstitution()
+PUT     /api/core/catalogs/institutions/:id controllers.CatalogController.updateInstitution(id: String)
+DELETE  /api/core/catalogs/institutions/:id controllers.CatalogController.deleteInstitution(id: String)
+GET     /api/core/catalogs/progress-states controllers.CatalogController.listProgressStates()
+
+# Progress & Evidence
+POST    /api/core/progress/evidence     controllers.ProgressController.submitEvidence()
+POST    /api/core/progress/approve      controllers.ProgressController.approveNode()
+
 # Health check
 GET     /health                         controllers.HealthController.health()
 

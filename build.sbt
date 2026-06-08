@@ -5,7 +5,7 @@ ThisBuild / organization := "itera"
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
   .settings(
-    name := "Itera",
+    name := "itera",
     scalacOptions ++= Seq(
       "-Ymacro-annotations",
       "-Wconf:cat=unused:info",
@@ -20,9 +20,10 @@ lazy val root = (project in file("."))
       "org.typelevel" %% "cats-effect" % "3.5.4",
 
       // Doobie (Functional DB Access)
-      "org.tpolecat" %% "doobie-core"     % "1.0.0-RC5",
-      "org.tpolecat" %% "doobie-hikari"   % "1.0.0-RC5",
-      "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC5",
+      "org.tpolecat" %% "doobie-core"           % "1.0.0-RC5",
+      "org.tpolecat" %% "doobie-hikari"         % "1.0.0-RC5",
+      "org.tpolecat" %% "doobie-postgres"       % "1.0.0-RC5",
+      "org.tpolecat" %% "doobie-postgres-circe" % "1.0.0-RC5",
 
       // Circe (JSON)
       "io.circe" %% "circe-core"    % "0.14.9",
@@ -41,6 +42,10 @@ lazy val root = (project in file("."))
       // Flyway
       "org.flywaydb" % "flyway-core" % "10.15.0",
       "org.flywaydb" % "flyway-database-postgresql" % "10.15.0",
+
+      // Force Jackson version to resolve Scala module conflict
+      "com.fasterxml.jackson.core" % "jackson-databind" % "2.14.3",
+      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.14.3",
 
       // Testing
       "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % Test
