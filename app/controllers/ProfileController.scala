@@ -20,6 +20,7 @@ import itera.features.goals.infrastructure.DoobieGoalRepository
 import itera.features.progress.infrastructure.DoobieProgressRepository
 import itera.shared.infrastructure.JwtTokenService
 import itera.shared.infrastructure.LogicClient
+import itera.shared.infrastructure.IAClient
 import doobie.util.transactor.Transactor
 import play.api.Configuration
 import java.util.UUID
@@ -29,7 +30,8 @@ import java.util.Properties
 class ProfileController @Inject()(
   val controllerComponents: ControllerComponents,
   config: Configuration,
-  logicClient: LogicClient
+  logicClient: LogicClient,
+  iaClient: IAClient
 )(implicit ec: ExecutionContext) extends BaseController {
 
   // JSON formatters
@@ -58,18 +60,20 @@ class ProfileController @Inject()(
   
   private val tokenService = new JwtTokenService[IO](jwtSecret, 86400)
   private val handlers = new ProfileHandlers[IO](studentRepo)
-  private val queryHandlers = new ProfileQueryHandlers[IO](studentRepo, goalRepo, progressRepo, logicClient)
+  private val queryHandlers = new ProfileQueryHandlers[IO](studentRepo, goalRepo, progressRepo, logicClient, iaClient)
 
   // Middleware helper to extract userId from JWT
   private def withAuth[A](action: UUID => Future[play.api.mvc.Result])(implicit request: play.api.mvc.Request[A]): Future[play.api.mvc.Result] = {
-    request.headers.get("Authorization") match {
-      case Some(auth) if auth.startsWith("Bearer ") =>
-        val token = auth.substring(7)
+    val maybeToken = request.cookies.get("itera_auth").map(_.value) orElse 
+                    request.headers.get("Authorization").filter(_.startsWith("Bearer ")).map(_.substring(7))
+
+    maybeToken match {
+      case Some(token) =>
         tokenService.validate(token).unsafeToFuture().flatMap {
           case Right((userId, _)) => action(userId)
           case Left(_) => Future.successful(Unauthorized(Json.obj("message" -> "Invalid token")))
         }
-      case _ => Future.successful(Unauthorized(Json.obj("message" -> "Missing or invalid Authorization header")))
+      case _ => Future.successful(Unauthorized(Json.obj("message" -> "Missing or invalid session")))
     }
   }
 

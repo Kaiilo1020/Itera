@@ -27,7 +27,15 @@ class AuthController @Inject()(
     request.body.validate[RegisterCommand].fold(
       errors => Future.successful(BadRequest(JsError.toJson(errors))),
       cmd => handlers.handleRegister(cmd).unsafeToFuture().map {
-        case Right(resp) => Created(Json.toJson(resp))
+        case Right(resp) => 
+          Created(Json.toJson(resp))
+            .withCookies(play.api.mvc.Cookie(
+              name = "itera_auth",
+              value = resp.token,
+              httpOnly = true,
+              secure = false, // Set to true in production with HTTPS
+              sameSite = Some(play.api.mvc.Cookie.SameSite.Lax)
+            ))
         case Left(err) => BadRequest(Json.obj("message" -> err.message))
       }
     )
@@ -37,7 +45,15 @@ class AuthController @Inject()(
     request.body.validate[LoginCommand].fold(
       errors => Future.successful(BadRequest(JsError.toJson(errors))),
       cmd => handlers.handleLogin(cmd).unsafeToFuture().map {
-        case Right(resp) => Ok(Json.toJson(resp))
+        case Right(resp) => 
+          Ok(Json.toJson(resp))
+            .withCookies(play.api.mvc.Cookie(
+              name = "itera_auth",
+              value = resp.token,
+              httpOnly = true,
+              secure = false, // Set to true in production with HTTPS
+              sameSite = Some(play.api.mvc.Cookie.SameSite.Lax)
+            ))
         case Left(err) => Unauthorized(Json.obj("message" -> err.message))
       }
     )

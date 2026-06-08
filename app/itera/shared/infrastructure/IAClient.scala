@@ -38,7 +38,7 @@ class IAClient @Inject()(
     )
 
     breaker.withCircuitBreaker {
-      ws.url(s"$baseUrl/analytics/match-score")
+      ws.url(s"$baseUrl/match/evaluate")
         .withRequestTimeout(5.seconds)
         .post(payload)
         .map { response =>
