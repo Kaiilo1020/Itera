@@ -26,4 +26,4 @@ COPY --from=build /app/target/universal/stage .
 EXPOSE 8080
 ENV PLAY_HTTP_SECRET_KEY="changeme"
 # The binary name is lowercase "itera" because we set 'name := "itera"' in build.sbt
-ENTRYPOINT ["./bin/itera", "-Dplay.server.provider=play.core.server.NettyServerProvider"]
+ENTRYPOINT ["./bin/itera"]
