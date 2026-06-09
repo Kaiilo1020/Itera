@@ -30,7 +30,8 @@ class ProfileHandlers[F[_]: Async](repo: StudentRepository[F]) {
         names = cmd.names.getOrElse(student.names),
         surnames = cmd.surnames.getOrElse(student.surnames),
         institutionId = cmd.institutionId.orElse(student.institutionId),
-        cycle = cmd.cycle.getOrElse(student.cycle)
+        cycle = cmd.cycle.getOrElse(student.cycle),
+        academicGoal = cmd.academicGoal.getOrElse(student.academicGoal)
       )
       
       updatedProfile = profile.copy(

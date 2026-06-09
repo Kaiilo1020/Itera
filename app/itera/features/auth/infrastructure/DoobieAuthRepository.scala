@@ -38,8 +38,12 @@ class DoobieAuthRepository[F[_]: Async](xa: Transactor[F]) extends AuthRepositor
       .update.run.transact(xa).void
 
   override def findDefaultRoleId(): F[UUID] =
-    sql"SELECT id FROM roles WHERE name = 'student' LIMIT 1"
+    sql"SELECT id FROM roles WHERE name = 'ESTUDIANTE' LIMIT 1"
       .query[UUID]
-      .unique
+      .option
       .transact(xa)
+      .flatMap {
+        case Some(id) => id.pure[F]
+        case None => Async[F].raiseError(new RuntimeException("Default 'ESTUDIANTE' role not found in database. Please run migrations/seeds."))
+      }
 }

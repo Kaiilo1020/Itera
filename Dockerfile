@@ -25,5 +25,5 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/target/universal/stage .
 EXPOSE 8080
 ENV PLAY_HTTP_SECRET_KEY="changeme"
-# The binary name is lowercase "itera" because we set 'name := "itera"' in build.sbt
-ENTRYPOINT ["./bin/itera"]
+# Ensure RUNNING_PID is removed and start the app
+CMD ["sh", "-c", "rm -f /app/RUNNING_PID && ./bin/itera"]

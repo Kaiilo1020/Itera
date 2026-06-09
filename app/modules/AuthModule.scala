@@ -2,13 +2,14 @@ package modules
 
 import com.google.inject.{AbstractModule, Provides}
 import javax.inject.Singleton
-import play.api.db.Database
 import play.api.Configuration
 import doobie.util.transactor.Transactor
 import cats.effect.IO
 import itera.features.auth.domain.AuthRepository
 import itera.features.auth.infrastructure.DoobieAuthRepository
 import itera.features.auth.commands.AuthHandlers
+import itera.features.profile.domain.StudentRepository
+import itera.features.profile.infrastructure.DoobieStudentRepository
 import itera.shared.infrastructure.{JwtTokenService, TokenService}
 import java.util.Properties
 
@@ -26,11 +27,11 @@ class AuthModule extends AbstractModule {
     val dbUrl = config.get[String]("db.default.url")
     val dbUser = config.get[String]("db.default.username")
     val dbPass = config.get[String]("db.default.password")
-    
+
     val props = new Properties()
     props.setProperty("user", dbUser)
     props.setProperty("password", dbPass)
-    
+
     Transactor.fromDriverManager[IO](
       "org.postgresql.Driver", dbUrl, props, None
     )
@@ -44,6 +45,12 @@ class AuthModule extends AbstractModule {
 
   @Provides
   @Singleton
+  def provideStudentRepository(xa: Transactor[IO]): StudentRepository[IO] = {
+    new DoobieStudentRepository[IO](xa)
+  }
+
+  @Provides
+  @Singleton
   def provideTokenService(config: Configuration): TokenService[IO] = {
     val jwtSecret = config.get[String]("jwt.secret")
     new JwtTokenService[IO](jwtSecret, 86400)
@@ -51,7 +58,11 @@ class AuthModule extends AbstractModule {
 
   @Provides
   @Singleton
-  def provideAuthHandlers(repo: AuthRepository[IO], tokenService: TokenService[IO]): AuthHandlers[IO] = {
-    new AuthHandlers[IO](repo, tokenService)
+  def provideAuthHandlers(
+    repo: AuthRepository[IO], 
+    studentRepo: StudentRepository[IO], 
+    tokenService: TokenService[IO]
+  ): AuthHandlers[IO] = {
+    new AuthHandlers[IO](repo, studentRepo, tokenService)
   }
 }

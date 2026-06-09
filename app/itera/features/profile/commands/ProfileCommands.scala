@@ -19,5 +19,6 @@ final case class UpdateProfileCommand(
   institutionId: Option[UUID],
   cycle: Option[Int],
   skills: Option[List[Skill]],
-  photo: Option[String]
+  photo: Option[String],
+  academicGoal: Option[String]
 )

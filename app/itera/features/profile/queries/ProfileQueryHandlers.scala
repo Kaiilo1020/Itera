@@ -20,10 +20,29 @@ class ProfileQueryHandlers[F[_]: Async](
 
   def getProfile(userId: UUID): F[Either[DomainError, StudentProfileView]] = {
     import scala.concurrent.ExecutionContext.Implicits.global
+    import itera.features.profile.domain.{Student, Profile}
+    
+    println(s"🔍 [DEBUG] Solicitando perfil para userId: $userId")
 
     val result: EitherT[F, DomainError, StudentProfileView] = for {
-      student <- EitherT.fromOptionF(repo.findByUserId(userId), DomainError("Student profile not found"))
-      profile <- EitherT.fromOptionF(repo.findProfileByStudentId(student.id), DomainError("Academic profile not found"))
+      // 1. Ensure Student record exists
+      maybeStudent <- EitherT.right[DomainError](repo.findByUserId(userId))
+      student <- maybeStudent match {
+        case Some(s) => EitherT.rightT[F, DomainError](s)
+        case None => 
+          val newStudent = Student.create(userId, "Usuario", "Nuevo")
+          EitherT.right[DomainError](repo.saveStudent(newStudent)).as(newStudent)
+      }
+      
+      // 2. Ensure Profile record exists
+      maybeProfile <- EitherT.right[DomainError](repo.findProfileByStudentId(student.id))
+      profile <- maybeProfile match {
+        case Some(p) => EitherT.rightT[F, DomainError](p)
+        case None => 
+          val newProfile = Profile.empty(student.id)
+          EitherT.right[DomainError](repo.saveProfile(newProfile)).as(newProfile)
+      }
+
       goal    <- EitherT.right[DomainError](goalRepo.findByStudentId(student.id))
       
       // Get approved nodes from progress table (mocked for now)
@@ -39,7 +58,7 @@ class ProfileQueryHandlers[F[_]: Async](
 
       // Call IA microservice for match score
       maybeMatchData <- EitherT.right[DomainError](Async[F].fromFuture(Async[F].delay {
-        iaClient.getMatchScore(student.id, profile.skills.map(_.name))
+        iaClient.getMatchScore(student.id, profile.skills.map(_.name), student.academicGoal)
       }))
       
     } yield StudentProfileView(
@@ -48,6 +67,7 @@ class ProfileQueryHandlers[F[_]: Async](
       names = student.names,
       surnames = student.surnames,
       cycle = student.cycle,
+      academicGoal = student.academicGoal,
       institutionId = student.institutionId,
       photo = profile.photo,
       experience = profile.experience,

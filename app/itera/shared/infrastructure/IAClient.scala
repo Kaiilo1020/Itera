@@ -31,10 +31,11 @@ class IAClient @Inject()(
   ).onOpen(logger.warn("Circuit Breaker for AI Service opened!"))
     .onClose(logger.info("Circuit Breaker for AI Service closed."))
 
-  def getMatchScore(studentId: UUID, skills: List[String]): Future[Option[play.api.libs.json.JsValue]] = {
+  def getMatchScore(studentId: UUID, skills: List[String], goal: String): Future[Option[play.api.libs.json.JsValue]] = {
     val payload = Json.obj(
       "student_id" -> studentId.toString,
-      "skills" -> skills
+      "skills" -> skills,
+      "objetivo" -> goal
     )
 
     breaker.withCircuitBreaker {

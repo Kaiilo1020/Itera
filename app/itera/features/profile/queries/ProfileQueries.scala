@@ -9,6 +9,7 @@ final case class StudentProfileView(
   names: String,
   surnames: String,
   cycle: Int,
+  academicGoal: String,
   institutionId: Option[UUID],
   photo: Option[String],
   experience: Int,
