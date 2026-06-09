@@ -8,7 +8,8 @@ final case class Student(
   institutionId: Option[UUID],
   names: String,
   surnames: String,
-  cycle: Int
+  cycle: Int,
+  academicGoal: String = "General"
 )
 
 object Student {
@@ -17,7 +18,8 @@ object Student {
     names: String,
     surnames: String,
     institutionId: Option[UUID] = None,
-    cycle: Int = 1
+    cycle: Int = 1,
+    academicGoal: String = "General"
   ): Student = {
     Student(
       id = UUID.randomUUID(),
@@ -25,7 +27,8 @@ object Student {
       institutionId = institutionId,
       names = names,
       surnames = surnames,
-      cycle = cycle
+      cycle = cycle,
+      academicGoal = academicGoal
     )
   }
 }

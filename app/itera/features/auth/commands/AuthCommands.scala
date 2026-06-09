@@ -4,6 +4,8 @@ import itera.features.auth.domain.{Email, RawPassword}
 import itera.shared.domain.DomainError
 
 final case class RegisterCommand(
+  names: String,
+  surnames: String,
   email: String,
   password: String
 )
